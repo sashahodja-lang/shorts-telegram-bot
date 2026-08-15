@@ -1,23 +1,54 @@
 import os
 import uuid
 import asyncio
+import platform
+import shutil
+import urllib.request
+import zipfile
 import yt_dlp
 import imageio_ffmpeg
 from config import TEMP_DOWNLOADS_DIR
 
 FFMPEG_EXE = imageio_ffmpeg.get_ffmpeg_exe()
 
+def ensure_js_runtime():
+    """Ensure a JavaScript runtime (Node or Deno) is available for yt-dlp signature challenge solving."""
+    if shutil.which("node") or shutil.which("deno"):
+        return
+    if platform.system() == "Linux":
+        deno_dir = "/tmp/bin"
+        os.makedirs(deno_dir, exist_ok=True)
+        deno_path = os.path.join(deno_dir, "deno")
+        if not os.path.exists(deno_path):
+            try:
+                zip_path = "/tmp/deno.zip"
+                url = "https://github.com/denoland/deno/releases/download/v1.46.3/deno-x86_64-unknown-linux-gnu.zip"
+                urllib.request.urlretrieve(url, zip_path)
+                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                    zip_ref.extractall(deno_dir)
+                os.chmod(deno_path, 0o755)
+                print("Auto-installed Deno JS runtime for yt-dlp signature challenges.")
+            except Exception as e:
+                print("Notice: Could not auto-download Deno:", e)
+        if os.path.exists(deno_path):
+            curr_path = os.environ.get("PATH", "")
+            if deno_dir not in curr_path:
+                os.environ["PATH"] = f"{deno_dir}:{curr_path}"
+
+# Call at module import
+ensure_js_runtime()
+
 def extract_video_info(url: str):
+    ensure_js_runtime()
     ydl_opts = {
         'quiet': True,
         'no_warnings': True,
         'nocheckcertificate': True,
-        'js_runtimes': {'node': {}},
+        'js_runtimes': {'node': {}, 'deno': {}},
         'remote_components': ['ejs:github'],
         'extractor_args': {
             'youtube': {
-                'player_client': ['android'],
-                'player_skip': ['webpage', 'configs']
+                'player_client': ['android', 'ios', 'tv_embedded']
             }
         }
     }
@@ -62,12 +93,11 @@ def download_video_sync(url: str, quality: str):
         'no_warnings': True,
         'nocheckcertificate': True,
         'ignoreerrors': False,
-        'js_runtimes': {'node': {}},
+        'js_runtimes': {'node': {}, 'deno': {}},
         'remote_components': ['ejs:github'],
         'extractor_args': {
             'youtube': {
-                'player_client': ['android'],
-                'player_skip': ['webpage', 'configs']
+                'player_client': ['android', 'ios', 'tv_embedded']
             }
         },
         'postprocessor_args': {
