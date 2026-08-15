@@ -1,0 +1,4 @@
+aiogram>=3.3.0
+yt-dlp>=2024.0.0
+imageio-ffmpeg>=0.5.1
+aiofiles>=23.2.1
