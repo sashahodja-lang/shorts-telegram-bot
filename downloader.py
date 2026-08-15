@@ -48,7 +48,7 @@ def extract_video_info(url: str):
         'remote_components': ['ejs:github'],
         'extractor_args': {
             'youtube': {
-                'player_client': ['android', 'ios', 'tv_embedded']
+                'player_client': ['android']
             }
         }
     }
@@ -97,7 +97,7 @@ def download_video_sync(url: str, quality: str):
         'remote_components': ['ejs:github'],
         'extractor_args': {
             'youtube': {
-                'player_client': ['android', 'ios', 'tv_embedded']
+                'player_client': ['android']
             }
         },
         'postprocessor_args': {
